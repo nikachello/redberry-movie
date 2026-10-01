@@ -46,6 +46,16 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Custom colors */
+
+  --color-primary: #ffffff;
+  --color-secondary: #a9a9a9;
+  --color-disabled: #a9a9a9;
+
+  --color-red: #ec3013;
+  --color-green: #4ade80;
+  --color-orange: #e27e04;
 }
 
 :root {
@@ -124,7 +134,8 @@
   body {
     @apply bg-background text-foreground;
   }
-  button:not(:disabled), [role="button"]:not(:disabled) {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   html {
