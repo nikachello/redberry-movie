@@ -2,6 +2,7 @@
 
 import type { MovieWithSynopsis } from "@/types/movie";
 import { ChevronLeft, ChevronRight, Clock3, Ticket } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -52,7 +53,7 @@ export default function HeroSlider({ movies }: HeroSliderProps) {
             }`}
           >
             {/* Background */}
-            <img
+            <Image
               src={movie.posterUrl}
               alt={movie.title}
               className="absolute inset-0 h-full w-full object-cover"

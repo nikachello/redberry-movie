@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Movie } from "@/types/movie";
 import Link from "next/link";
 import { getRecentlyViewed } from "@/lib/utils";
+import Image from "next/image";
 
 export default function RecentlyViewed() {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -29,7 +30,7 @@ export default function RecentlyViewed() {
             href={`/movies/${movie.slug}`}
             className="w-[150px] shrink-0"
           >
-            <img
+            <Image
               src={movie.posterUrl}
               alt={movie.title}
               className="aspect-[2/3] w-full rounded-xl object-cover"

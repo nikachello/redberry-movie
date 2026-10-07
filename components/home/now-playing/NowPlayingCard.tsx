@@ -1,4 +1,5 @@
 import type { MovieWithSynopsis } from "@/types/movie";
+import Image from "next/image";
 import Link from "next/link";
 
 type Props = {
@@ -43,7 +44,7 @@ export default function NowPlayingCard({ movie }: Props) {
         "
       >
         {/* Poster */}
-        <img
+        <Image
           src={movie.posterUrl}
           alt={movie.title}
           className="
@@ -60,7 +61,7 @@ export default function NowPlayingCard({ movie }: Props) {
         />
 
         {/* Backdrop */}
-        <img
+        <Image
           src={movie.backdropUrl}
           alt=""
           className="

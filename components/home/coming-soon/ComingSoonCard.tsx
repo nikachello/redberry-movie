@@ -1,5 +1,6 @@
 import type { Movie } from "@/types/movie";
 import { Bell } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 type Props = {
@@ -35,7 +36,7 @@ export default function ComingSoonCard({ movie }: Props) {
         href={`/movies/${movie.slug}`}
         className="h-full w-[100px] shrink-0 overflow-hidden rounded-xl"
       >
-        <img
+        <Image
           src={movie.posterUrl}
           alt={movie.title}
           className="h-full w-full object-cover"
