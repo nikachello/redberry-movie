@@ -8,10 +8,9 @@ import { logout } from "@/lib/api/auth";
 import { useAuth } from "./AuthProvider";
 
 export default function UserMenu() {
-  const { user, clearAuth } = useAuth();
+  const { user, clearAuth, openProfile } = useAuth();
 
   const [isOpen, setIsOpen] = useState(false);
-
   const menuRef = useRef<HTMLDivElement>(null);
 
   const logoutMutation = useMutation({
@@ -47,6 +46,11 @@ export default function UserMenu() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  function handleOpenProfile() {
+    setIsOpen(false);
+    openProfile();
+  }
 
   return (
     <div ref={menuRef} className="relative">
@@ -132,6 +136,7 @@ export default function UserMenu() {
             <div className="mt-4">
               <button
                 type="button"
+                onClick={handleOpenProfile}
                 className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-1 py-3 text-left text-[13px] font-semibold text-white transition-colors hover:text-white/70"
               >
                 <UserRound size={17} />

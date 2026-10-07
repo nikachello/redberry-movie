@@ -19,6 +19,15 @@ type AuthModal = "login" | "register" | "profile" | null;
 
 type ProtectedAction = () => void;
 
+type RequireAuthOptions = {
+  requireCompleteProfile?: boolean;
+};
+
+type PendingAction = {
+  action: ProtectedAction;
+  requireCompleteProfile: boolean;
+};
+
 type AuthContextValue = {
   user: User | null;
   isAuthenticated: boolean;
@@ -30,9 +39,10 @@ type AuthContextValue = {
   openProfile: () => void;
   closeModal: () => void;
 
-  requireAuth: (action: ProtectedAction) => void;
+  requireAuth: (action: ProtectedAction, options?: RequireAuthOptions) => void;
 
   setAuthenticatedUser: (user: User) => void;
+  updateUser: (user: User) => void;
   clearAuth: () => void;
 };
 
@@ -50,13 +60,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setTokenState] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const pendingActionRef = useRef<ProtectedAction | null>(null);
+  const pendingActionRef = useRef<PendingAction | null>(null);
 
   useEffect(() => {
     setTokenState(getToken());
     setIsInitialized(true);
   }, []);
 
+  // scroll lock roca modali giaa
+  useEffect(() => {
+    if (!modal) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [modal]);
+
+  // davabrunot logged in useris info app bootisas
   const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: authKeys.me,
 
@@ -81,14 +107,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     retry: false,
   });
 
-  function requireAuth(action: ProtectedAction) {
-    if (user) {
-      action();
+  //  movtxovot users autorizacia garkveuli mokmedebebebis shesrulebisas
+  function requireAuth(
+    action: ProtectedAction,
+    options: RequireAuthOptions = {},
+  ) {
+    const requireCompleteProfile = options.requireCompleteProfile ?? false;
+
+    // shevinaxot shesasrulebeli action
+    if (!user) {
+      pendingActionRef.current = {
+        action,
+        requireCompleteProfile,
+      };
+
+      setModal("login");
+
       return;
     }
 
-    pendingActionRef.current = action;
-    setModal("login");
+    if (requireCompleteProfile && !user.profileComplete) {
+      pendingActionRef.current = {
+        action,
+        requireCompleteProfile: true,
+      };
+
+      setModal("profile");
+
+      return;
+    }
+
+    action();
   }
 
   function setAuthenticatedUser(authenticatedUser: User) {
@@ -96,15 +145,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     queryClient.setQueryData(authKeys.me, authenticatedUser);
 
-    setModal(null);
-
     const pendingAction = pendingActionRef.current;
+
+    if (!pendingAction) {
+      setModal(null);
+      return;
+    }
+
+    if (
+      pendingAction.requireCompleteProfile &&
+      !authenticatedUser.profileComplete
+    ) {
+      setModal("profile");
+      return;
+    }
 
     pendingActionRef.current = null;
 
-    if (pendingAction) {
-      pendingAction();
+    setModal(null);
+
+    pendingAction.action();
+  }
+
+  function updateUser(updatedUser: User) {
+    queryClient.setQueryData(authKeys.me, updatedUser);
+
+    const pendingAction = pendingActionRef.current;
+
+    if (!pendingAction) {
+      setModal(null);
+      return;
     }
+
+    if (pendingAction.requireCompleteProfile && !updatedUser.profileComplete) {
+      return;
+    }
+
+    pendingActionRef.current = null;
+
+    setModal(null);
+
+    pendingAction.action();
   }
 
   function clearAuth() {
@@ -115,6 +196,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryClient.setQueryData(authKeys.me, null);
 
     pendingActionRef.current = null;
+
+    setModal(null);
   }
 
   function closeModal() {
@@ -141,6 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         requireAuth,
 
         setAuthenticatedUser,
+        updateUser,
         clearAuth,
       }}
     >

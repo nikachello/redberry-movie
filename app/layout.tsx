@@ -8,6 +8,7 @@ import Footer from "@/components/global/footer/Footer";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import LoginModal from "@/components/auth/LoginModal";
 import RegisterModal from "@/components/auth/RegisterModal";
+import ProfileModal from "@/components/auth/ProfileModal";
 
 const loraHeading = Lora({ subsets: ["latin"], variable: "--font-heading" });
 
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Footer />
             <LoginModal />
             <RegisterModal />
+            <ProfileModal />
           </AuthProvider>
         </QueryProvider>
       </body>

@@ -12,3 +12,10 @@ export type Venue = {
   city: string;
   formats: Format[];
 };
+
+export type Language = {
+  id: number;
+  slug: string;
+  name: string;
+  code: string;
+};

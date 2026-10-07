@@ -30,3 +30,11 @@ export type RegisterInput = {
   passwordConfirmation: string;
   avatar?: File;
 };
+
+export type UpdateProfileInput = {
+  fullName: string;
+  mobileNumber: string;
+  dateOfBirth: string;
+  preferredVenueId?: number;
+  avatar?: File;
+};
