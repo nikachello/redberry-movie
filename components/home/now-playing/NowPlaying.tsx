@@ -7,13 +7,10 @@ type Props = {
 };
 
 export default function NowPlaying({ movies }: Props) {
-  if (!movies.length) {
-    return null;
-  }
+  if (!movies.length) return null;
 
   return (
     <section className="border-b border-white/10 bg-[#070b19] py-8">
-      {/* Header */}
       <div className="mb-5 flex items-center justify-between px-5 md:px-8">
         <h2 className="text-lg font-bold uppercase text-white">Now Playing</h2>
 
@@ -25,14 +22,15 @@ export default function NowPlaying({ movies }: Props) {
         </Link>
       </div>
 
-      {/* Cards */}
       <div
         className="
           scrollbar-hide
           flex
+          h-[376px]
           items-start
           gap-4
           overflow-x-auto
+          overflow-y-hidden
           px-5
           pb-4
           md:px-8

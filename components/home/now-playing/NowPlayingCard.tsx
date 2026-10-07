@@ -11,10 +11,11 @@ export default function NowPlayingCard({ movie }: Props) {
       className="
         group
         flex
-        min-h-[360px]
+        h-[360px]
         w-[194px]
         shrink-0
         flex-col
+        overflow-hidden
         rounded-2xl
         bg-[#1d1f2e]
         p-2.5
@@ -38,10 +39,10 @@ export default function NowPlayingCard({ movie }: Props) {
           transition-[height]
           duration-300
           ease-out
-          group-hover:h-[168px]
+          group-hover:h-[145px]
         "
       >
-        {/* Normal poster */}
+        {/* Poster */}
         <img
           src={movie.posterUrl}
           alt={movie.title}
@@ -58,10 +59,10 @@ export default function NowPlayingCard({ movie }: Props) {
           "
         />
 
-        {/* Hover backdrop */}
+        {/* Backdrop */}
         <img
           src={movie.backdropUrl}
-          alt={movie.title}
+          alt=""
           className="
             absolute
             inset-0
@@ -76,46 +77,32 @@ export default function NowPlayingCard({ movie }: Props) {
         />
       </Link>
 
-      {/* Movie information */}
+      {/* Content */}
       <div className="flex min-h-0 flex-1 flex-col pt-2">
-        {/* Title */}
         <Link href={`/movies/${movie.slug}`}>
           <h3 className="truncate text-sm font-bold text-white">
             {movie.title}
           </h3>
         </Link>
 
-        {/* Genre + runtime */}
         <p className="mt-1 truncate text-[10px] text-white/50">
           {movie.genres[0]?.name}
           {movie.genres.length > 0 && " · "}
           {movie.runtimeMinutes} min
         </p>
 
-        {/* Age rating */}
         <div className="mt-2">
-          <span
-            className="
-              inline-flex
-              rounded-full
-              bg-red-500/10
-              px-2
-              py-1
-              text-[9px]
-              font-bold
-              text-red-500
-            "
-          >
+          <span className="inline-flex rounded-full bg-red-500/10 px-2 py-1 text-[9px] font-bold text-red-500">
             {movie.ageRating.code}
           </span>
         </div>
 
-        {/* Synopsis - only visible on hover */}
+        {/* Synopsis */}
         <p
           className="
             mt-2
             hidden
-            line-clamp-3
+            line-clamp-5
             text-[10px]
             leading-[13px]
             text-white/50
@@ -125,7 +112,7 @@ export default function NowPlayingCard({ movie }: Props) {
           {movie.synopsis}
         </p>
 
-        {/* Price + Buy Ticket */}
+        {/* Bottom */}
         <div className="mt-auto flex items-center justify-between gap-3 pt-2">
           <span className="shrink-0 whitespace-nowrap text-[10px] font-semibold text-white">
             From ₾ {movie.fromPrice}
