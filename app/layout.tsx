@@ -4,7 +4,6 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/global/navbar/Navbar";
 import { QueryProvider } from "@/lib/providers/QueryProvider";
-import Footer from "@/components/global/footer/Footer";
 
 const loraHeading = Lora({ subsets: ["latin"], variable: "--font-heading" });
 
@@ -43,7 +42,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <QueryProvider>
           <Navbar />
           {children}
-          <Footer />
         </QueryProvider>
       </body>
     </html>
