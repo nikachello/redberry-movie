@@ -142,3 +142,11 @@
     @apply font-sans;
   }
 }
+
+@utility scrollbar-hide {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  scrollbar-width: none;
+}

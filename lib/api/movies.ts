@@ -7,3 +7,8 @@ export async function getFeaturedMovies() {
     await api<ApiResponse<MovieWithSynopsis[]>>("/movies/featured");
   return response.data;
 }
+
+export async function getNowPlayingMovies() {
+  const response = await api<ApiResponse<MovieWithSynopsis[]>>("/movies/now-playing");
+  return response.data;
+}
