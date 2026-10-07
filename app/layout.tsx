@@ -5,6 +5,9 @@ import { cn } from "@/lib/utils";
 import Navbar from "@/components/global/navbar/Navbar";
 import { QueryProvider } from "@/lib/providers/QueryProvider";
 import Footer from "@/components/global/footer/Footer";
+import { AuthProvider } from "@/components/auth/AuthProvider";
+import LoginModal from "@/components/auth/LoginModal";
+import RegisterModal from "@/components/auth/RegisterModal";
 
 const loraHeading = Lora({ subsets: ["latin"], variable: "--font-heading" });
 
@@ -41,9 +44,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <QueryProvider>
-          <Navbar />
-          {children}
-          <Footer />
+          <AuthProvider>
+            <Navbar />
+            {children}
+            <Footer />
+            <LoginModal />
+            <RegisterModal />
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>

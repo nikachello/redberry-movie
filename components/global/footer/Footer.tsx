@@ -1,4 +1,7 @@
+"use client";
 import Link from "next/link";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { Button } from "@/components/ui/button";
 
 export default function Footer() {
   return (
