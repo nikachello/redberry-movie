@@ -53,7 +53,7 @@ export default function HeroSlider({ movies }: HeroSliderProps) {
             }`}
           >
             {/* Background */}
-            <Image
+            <img
               src={movie.posterUrl}
               alt={movie.title}
               className="absolute inset-0 h-full w-full object-cover"

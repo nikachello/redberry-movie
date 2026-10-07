@@ -36,7 +36,7 @@ export default function ComingSoonCard({ movie }: Props) {
         href={`/movies/${movie.slug}`}
         className="h-full w-[100px] shrink-0 overflow-hidden rounded-xl"
       >
-        <Image
+        <img
           src={movie.posterUrl}
           alt={movie.title}
           className="h-full w-full object-cover"

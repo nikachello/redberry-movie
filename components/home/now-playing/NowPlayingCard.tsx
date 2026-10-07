@@ -44,7 +44,7 @@ export default function NowPlayingCard({ movie }: Props) {
         "
       >
         {/* Poster */}
-        <Image
+        <img
           src={movie.posterUrl}
           alt={movie.title}
           className="
@@ -61,7 +61,7 @@ export default function NowPlayingCard({ movie }: Props) {
         />
 
         {/* Backdrop */}
-        <Image
+        <img
           src={movie.backdropUrl}
           alt=""
           className="

@@ -30,7 +30,7 @@ export default function RecentlyViewed() {
             href={`/movies/${movie.slug}`}
             className="w-[150px] shrink-0"
           >
-            <Image
+            <img
               src={movie.posterUrl}
               alt={movie.title}
               className="aspect-[2/3] w-full rounded-xl object-cover"
