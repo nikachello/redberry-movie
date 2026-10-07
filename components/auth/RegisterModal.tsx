@@ -1,12 +1,15 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { Check, Upload, X } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-import { register } from "@/lib/api/auth";
+import { register as registerUser } from "@/lib/api/auth";
 import { setToken } from "@/lib/auth/token";
 import type { ApiError } from "@/lib/api/client";
+import { registerSchema, type RegisterFormData } from "@/lib/validation/auth";
 import { useAuth } from "./AuthProvider";
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
@@ -16,63 +19,68 @@ const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export default function RegisterModal() {
   const { modal, closeModal, openLogin, setAuthenticatedUser } = useAuth();
 
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-
-  const [formError, setFormError] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isValid },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    mode: "onChange",
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      passwordConfirmation: "",
+    },
+  });
+
   const registerMutation = useMutation({
-    mutationFn: register,
+    mutationFn: registerUser,
 
     onSuccess: (data) => {
       setToken(data.token);
       setAuthenticatedUser(data.user);
+
+      reset();
+      clearAvatar();
     },
   });
 
-  if (modal !== "register") {
-    return null;
-  }
+  const username = watch("username");
+  const email = watch("email");
+  const password = watch("password");
+  const passwordConfirmation = watch("passwordConfirmation");
 
   const apiError = registerMutation.error as ApiError | null;
 
-  const isUsernameValid = username.trim().length >= 3;
+  const isUsernameValid = !!username && !errors.username;
 
-  const isEmailValid =
-    email.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isEmailValid = !!email && !errors.email;
 
-  const isPasswordValid = password.length >= 3;
+  const isPasswordValid = !!password && !errors.password;
 
-  const isConfirmPasswordValid =
-    confirmPassword.length >= 3 && confirmPassword === password;
+  const isPasswordConfirmationValid =
+    !!passwordConfirmation && !errors.passwordConfirmation;
 
-  const isFormValid =
-    isUsernameValid &&
-    isEmailValid &&
-    isPasswordValid &&
-    isConfirmPasswordValid &&
-    !avatarError;
-
-  function resetForm() {
-    setUsername("");
-    setEmail("");
-    setPassword("");
-    setConfirmPassword("");
-    setAvatar(null);
-
+  function clearAvatar() {
     if (avatarPreview) {
       URL.revokeObjectURL(avatarPreview);
     }
 
+    setAvatar(null);
     setAvatarPreview(null);
-    setFormError(null);
     setAvatarError(null);
+  }
+
+  function resetForm() {
+    reset();
+    clearAvatar();
     registerMutation.reset();
   }
 
@@ -98,12 +106,14 @@ export default function RegisterModal() {
 
     if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
       setAvatarError("Avatar must be JPG, PNG or WebP.");
+
       event.target.value = "";
       return;
     }
 
     if (file.size > MAX_AVATAR_SIZE) {
       setAvatarError("Avatar must be smaller than 2MB.");
+
       event.target.value = "";
       return;
     }
@@ -116,80 +126,42 @@ export default function RegisterModal() {
     setAvatarPreview(URL.createObjectURL(file));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    setFormError(null);
-
-    if (!isUsernameValid) {
-      setFormError("Username must be at least 3 characters.");
-      return;
-    }
-
-    if (!isEmailValid) {
-      setFormError("Enter a valid email.");
-      return;
-    }
-
-    if (!isPasswordValid) {
-      setFormError("Password must be at least 3 characters.");
-      return;
-    }
-
-    if (!isConfirmPasswordValid) {
-      setFormError("Passwords do not match.");
-      return;
-    }
+  function onSubmit(data: RegisterFormData) {
+    registerMutation.reset();
 
     registerMutation.mutate({
-      username: username.trim(),
-      email: email.trim(),
-      password,
-      passwordConfirmation: confirmPassword,
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      passwordConfirmation: data.passwordConfirmation,
       avatar: avatar ?? undefined,
     });
   }
 
-  function getFieldError(field: string) {
+  function getApiFieldError(field: string) {
     return apiError?.errors?.[field]?.[0];
+  }
+
+  if (modal !== "register") {
+    return null;
   }
 
   return (
     <div
-      className="
-        fixed inset-0 z-[100]
-        flex items-center justify-center
-        bg-black/65 px-4 py-8
-        backdrop-blur-[2px]
-      "
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 px-4 py-8 backdrop-blur-[2px]"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
           handleClose();
         }
       }}
     >
-      <div
-        className="
-          relative
-          w-full max-w-[500px]
-          rounded-[24px]
-          bg-[#080d20]
-          px-8 py-8
-          shadow-2xl
-        "
-      >
+      <div className="relative w-full max-w-[500px] rounded-[24px] bg-[#080d20] px-8 py-8 shadow-2xl">
         {/* Close */}
         <button
           type="button"
           onClick={handleClose}
           aria-label="Close"
-          className="
-            absolute right-7 top-7
-            cursor-pointer
-            text-white/70
-            transition-colors
-            hover:text-white
-          "
+          className="absolute right-7 top-7 cursor-pointer text-white/70 transition-colors hover:text-white"
         >
           <X size={20} strokeWidth={1.5} />
         </button>
@@ -199,25 +171,11 @@ export default function RegisterModal() {
 
         <p className="mt-1 text-[12px] text-white/50">Welcome to Kino XII</p>
 
-        <form onSubmit={handleSubmit} className="mt-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6">
           {/* Avatar */}
           <div>
             <div className="flex items-center gap-3">
-              <label
-                className="
-                  relative
-                  flex size-[44px]
-                  shrink-0
-                  cursor-pointer
-                  items-center
-                  justify-center
-                  overflow-hidden
-                  rounded-[8px]
-                  bg-[#1d2133]
-                  transition
-                  hover:bg-[#252a40]
-                "
-              >
+              <label className="relative flex size-[44px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[8px] bg-[#1d2133] transition hover:bg-[#252a40]">
                 {avatarPreview ? (
                   <img
                     src={avatarPreview}
@@ -263,15 +221,14 @@ export default function RegisterModal() {
               id="register-username"
               label="Username"
               placeholder="User"
-              value={username}
-              valid={isUsernameValid}
               autoFocus
-              error={getFieldError("username")}
-              onChange={(value) => {
-                setUsername(value);
-                setFormError(null);
-                registerMutation.reset();
-              }}
+              valid={isUsernameValid}
+              error={errors.username?.message ?? getApiFieldError("username")}
+              inputProps={register("username", {
+                onChange: () => {
+                  registerMutation.reset();
+                },
+              })}
             />
           </div>
 
@@ -282,14 +239,13 @@ export default function RegisterModal() {
               label="Email"
               type="email"
               placeholder="example@gmail.com"
-              value={email}
               valid={isEmailValid}
-              error={getFieldError("email")}
-              onChange={(value) => {
-                setEmail(value);
-                setFormError(null);
-                registerMutation.reset();
-              }}
+              error={errors.email?.message ?? getApiFieldError("email")}
+              inputProps={register("email", {
+                onChange: () => {
+                  registerMutation.reset();
+                },
+              })}
             />
           </div>
 
@@ -300,14 +256,13 @@ export default function RegisterModal() {
               label="Password"
               type="password"
               placeholder="••••••••"
-              value={password}
               valid={isPasswordValid}
-              error={getFieldError("password")}
-              onChange={(value) => {
-                setPassword(value);
-                setFormError(null);
-                registerMutation.reset();
-              }}
+              error={errors.password?.message ?? getApiFieldError("password")}
+              inputProps={register("password", {
+                onChange: () => {
+                  registerMutation.reset();
+                },
+              })}
             />
 
             <Field
@@ -315,22 +270,20 @@ export default function RegisterModal() {
               label="Confirm password"
               type="password"
               placeholder="••••••••"
-              value={confirmPassword}
-              valid={isConfirmPasswordValid}
-              error={getFieldError("password_confirmation")}
-              onChange={(value) => {
-                setConfirmPassword(value);
-                setFormError(null);
-                registerMutation.reset();
-              }}
+              valid={isPasswordConfirmationValid}
+              error={
+                errors.passwordConfirmation?.message ??
+                getApiFieldError("password_confirmation")
+              }
+              inputProps={register("passwordConfirmation", {
+                onChange: () => {
+                  registerMutation.reset();
+                },
+              })}
             />
           </div>
 
-          {/* General error */}
-          {formError && (
-            <p className="mt-3 text-[11px] text-red-400">{formError}</p>
-          )}
-
+          {/* General API error */}
           {apiError?.message && !apiError.errors && (
             <p className="mt-3 text-[11px] text-red-400">{apiError.message}</p>
           )}
@@ -338,23 +291,8 @@ export default function RegisterModal() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={!isFormValid || registerMutation.isPending}
-            className="
-              mt-8
-              h-[44px]
-              w-full
-              cursor-pointer
-              rounded-full
-              bg-[#ff321c]
-              text-[12px]
-              font-bold
-              text-white
-              transition-colors
-              hover:bg-[#e92b18]
-              disabled:cursor-not-allowed
-              disabled:bg-[#5a5d6c]
-              disabled:text-white/50
-            "
+            disabled={!isValid || !!avatarError || registerMutation.isPending}
+            className="mt-8 h-[44px] w-full cursor-pointer rounded-full bg-[#ff321c] text-[12px] font-bold text-white transition-colors hover:bg-[#e92b18] disabled:cursor-not-allowed disabled:bg-[#5a5d6c] disabled:text-white/50"
           >
             {registerMutation.isPending ? "Creating account..." : "Sign up"}
           </button>
@@ -366,13 +304,7 @@ export default function RegisterModal() {
           <button
             type="button"
             onClick={handleOpenLogin}
-            className="
-              cursor-pointer
-              font-bold
-              text-[#ff321c]
-              transition-colors
-              hover:text-red-400
-            "
+            className="cursor-pointer font-bold text-[#ff321c] transition-colors hover:text-red-400"
           >
             Log in
           </button>
@@ -385,25 +317,25 @@ export default function RegisterModal() {
 type FieldProps = {
   id: string;
   label: string;
-  value: string;
   placeholder?: string;
   type?: "text" | "email" | "password";
   valid: boolean;
   autoFocus?: boolean;
   error?: string;
-  onChange: (value: string) => void;
+  inputProps: ReturnType<
+    ReturnType<typeof useForm<RegisterFormData>>["register"]
+  >;
 };
 
 function Field({
   id,
   label,
-  value,
   placeholder,
   type = "text",
   valid,
   autoFocus,
   error,
-  onChange,
+  inputProps,
 }: FieldProps) {
   return (
     <div>
@@ -418,7 +350,6 @@ function Field({
         <input
           id={id}
           type={type}
-          value={value}
           autoFocus={autoFocus}
           placeholder={placeholder}
           autoComplete={
@@ -426,41 +357,21 @@ function Field({
               ? "email"
               : type === "password"
                 ? "new-password"
-                : undefined
+                : "username"
           }
-          onChange={(event) => onChange(event.target.value)}
-          className={`
-            h-[44px]
-            w-full
-            rounded-[10px]
-            border
-            bg-[#1d2133]
-            px-4
-            pr-11
-            text-[12px]
-            text-white
-            outline-none
-            transition-colors
-            placeholder:text-white/40
-            ${
-              error
-                ? "border-red-500"
-                : "border-transparent focus:border-white/20"
-            }
-          `}
+          {...inputProps}
+          className={`h-[44px] w-full rounded-[10px] border bg-[#1d2133] px-4 pr-11 text-[12px] text-white outline-none transition-colors placeholder:text-white/40 ${
+            error
+              ? "border-red-500"
+              : "border-transparent focus:border-white/20"
+          }`}
         />
 
         {valid && !error && (
           <Check
             size={16}
             strokeWidth={2.5}
-            className="
-              absolute
-              right-4
-              top-1/2
-              -translate-y-1/2
-              text-green-400
-            "
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-green-400"
           />
         )}
       </div>
