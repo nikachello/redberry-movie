@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Lora } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Lora, Quando } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/global/navbar/Navbar";
+import { QueryProvider } from "@/lib/providers/QueryProvider";
 
 const loraHeading = Lora({ subsets: ["latin"], variable: "--font-heading" });
 
@@ -34,12 +35,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         geistMono.variable,
         "font-sans",
         inter.variable,
-        loraHeading.variable
+        loraHeading.variable,
       )}
     >
       <body className="min-h-full flex flex-col">
-        <Navbar />
-        {children}
+        <QueryProvider>
+          <Navbar />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );

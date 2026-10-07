@@ -1,7 +1,12 @@
-export default function Home() {
+import HeroSlider from "@/components/home/hero/HeroSlider";
+import { getFeaturedMovies } from "@/lib/api/movies";
+
+export default async function Home() {
+  const featuredMovies = await getFeaturedMovies();
+
   return (
     <main>
-      <div className="relative"></div>
+      <HeroSlider movies={featuredMovies} />
     </main>
   );
 }
