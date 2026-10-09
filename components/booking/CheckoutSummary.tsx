@@ -6,7 +6,6 @@ type Props = {
   movie: MovieDetail;
   session: Session;
   hold: SeatHold;
-  onPay: () => void;
   canPay: boolean;
   isPaying: boolean;
   paymentError?: string | null;
@@ -16,7 +15,6 @@ export default function CheckoutSummary({
   movie,
   session,
   hold,
-  onPay,
   canPay,
   isPaying,
   paymentError,
@@ -69,8 +67,7 @@ export default function CheckoutSummary({
         </div>
 
         <button
-          type="button"
-          onClick={onPay}
+          type="submit"
           disabled={!canPay || isPaying}
           className="w-full rounded-full bg-[#f12d17] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#d92815] disabled:cursor-not-allowed disabled:opacity-40"
         >

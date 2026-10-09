@@ -8,11 +8,15 @@ export function useHoldCountdown(expiresAt?: string) {
   useEffect(() => {
     if (!expiresAt) return;
 
+    const initialTick = window.setTimeout(() => setNow(Date.now()), 0);
     const interval = window.setInterval(() => {
       setNow(Date.now());
     }, 1000);
 
-    return () => window.clearInterval(interval);
+    return () => {
+      window.clearTimeout(initialTick);
+      window.clearInterval(interval);
+    };
   }, [expiresAt]);
 
   const expirationTime = expiresAt ? new Date(expiresAt).getTime() : 0;

@@ -3,6 +3,7 @@
 import { Armchair } from "lucide-react";
 
 import { useAuth } from "@/components/auth/AuthProvider";
+import { getBookingEligibility } from "@/lib/booking/eligibility";
 import type { MovieDetail } from "@/types/movie";
 import type { Session } from "@/types/session";
 
@@ -13,10 +14,11 @@ type Props = {
 };
 
 export default function SessionCard({ session, movie, onSelect }: Props) {
-  const { user, requireAuth } = useAuth();
+  const { user } = useAuth();
 
-  const isAgeBlocked =
-    !!user && user.age !== null && user.age < movie.ageRating.minAge;
+  const eligibility = getBookingEligibility(user, movie.ageRating?.minAge, session.date);
+  // Incomplete profiles remain clickable so the parent can open the profile flow.
+  const isAgeBlocked = !!user?.profileComplete && !!user.dateOfBirth && !eligibility.allowed;
 
   const isDisabled = session.isSoldOut || isAgeBlocked;
 
@@ -25,14 +27,7 @@ export default function SessionCard({ session, movie, onSelect }: Props) {
       return;
     }
 
-    requireAuth(
-      () => {
-        onSelect(session);
-      },
-      {
-        requireCompleteProfile: true,
-      },
-    );
+    onSelect(session);
   }
 
   return (

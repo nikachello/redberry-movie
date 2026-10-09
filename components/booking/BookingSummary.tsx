@@ -3,6 +3,7 @@
 import { Armchair, X } from "lucide-react";
 import type { SelectedSeat } from "@/types/booking";
 import { TicketType } from "@/types/order";
+import { isTicketTypeAllowed } from "@/lib/booking/selection";
 
 type Props = {
   selectedSeats: SelectedSeat[];
@@ -37,11 +38,6 @@ export default function BookingSummary({
   checkoutError,
   canProceed = true,
 }: Props) {
-  const isTicketTypeAllowed = (type: TicketType) =>
-    type.blockedFromRatingAge == null ||
-    movieMinimumAge == null ||
-    movieMinimumAge < type.blockedFromRatingAge;
-
   const getTicketType = (slug: string) =>
     ticketTypes.find((type) => type.slug === slug);
 
@@ -54,7 +50,7 @@ export default function BookingSummary({
   const hasInvalidSelection = selectedSeats.some((seat) => {
     const type = getTicketType(seat.ticketTypeSlug);
 
-    return !type || !isTicketTypeAllowed(type);
+    return !type || !isTicketTypeAllowed(type, movieMinimumAge);
   });
 
   const total = selectedSeats.reduce(
@@ -111,7 +107,7 @@ export default function BookingSummary({
                 aria-label={`Ticket type for seat ${seat.code}`}
               >
                 {ticketTypes.map((type) => {
-                  const allowed = isTicketTypeAllowed(type);
+                  const allowed = isTicketTypeAllowed(type, movieMinimumAge);
 
                   const active = seat.ticketTypeSlug === type.slug;
 

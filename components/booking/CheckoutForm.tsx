@@ -1,59 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { Check } from "lucide-react";
-import { checkoutSchema } from "@/lib/validation/checkout";
+import {
+  checkoutSchema,
+  type CheckoutInput,
+  type CheckoutPayload,
+} from "@/lib/validation/checkout";
 
-export type CheckoutDetails = {
-  fullName: string;
-  email: string;
-  mobileNumber: string;
-  cardNumber: string;
-  expiry: string;
-  cvv: string;
-};
+export default function CheckoutForm() {
+  const {
+    control,
+    register,
+    setValue,
+    clearErrors,
+    formState: { errors },
+  } = useFormContext<CheckoutInput, unknown, CheckoutPayload>();
+  const details = useWatch({ control });
 
-type Props = {
-  initialContact?: Partial<
-    Pick<CheckoutDetails, "fullName" | "email" | "mobileNumber">
-  >;
-  onChange?: (details: CheckoutDetails) => void;
-  errors?: Partial<Record<keyof CheckoutDetails, string>>;
-};
-
-const empty: CheckoutDetails = {
-  fullName: "",
-  email: "",
-  mobileNumber: "",
-  cardNumber: "",
-  expiry: "",
-  cvv: "",
-};
-
-export default function CheckoutForm({
-  initialContact,
-  onChange,
-  errors = {},
-}: Props) {
-  const [details, setDetails] = useState<CheckoutDetails>(() => ({
-    ...empty,
-    ...initialContact,
-  }));
-
-  useEffect(() => {
-    setDetails((previous) => ({
-      ...previous,
-      fullName: previous.fullName || initialContact?.fullName || "",
-      email: previous.email || initialContact?.email || "",
-      mobileNumber: previous.mobileNumber || initialContact?.mobileNumber || "",
-    }));
-  }, [
-    initialContact?.fullName,
-    initialContact?.email,
-    initialContact?.mobileNumber,
-  ]);
-
-  const update = (field: keyof CheckoutDetails, value: string) => {
+  const update = (field: keyof CheckoutInput, value: string) => {
     let formatted = value;
 
     if (field === "expiry") {
@@ -63,23 +28,21 @@ export default function CheckoutForm({
         digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
     }
 
-    const next = { ...details, [field]: formatted };
-
-    setDetails(next);
-    onChange?.(next);
+    setValue(field, formatted, { shouldValidate: true, shouldDirty: true });
+    clearErrors("root.server");
   };
 
-  const isFieldValid = (name: keyof CheckoutDetails) => {
+  const isFieldValid = (name: keyof CheckoutInput) => {
     const schema = checkoutSchema.shape[name];
 
     return (
-      details[name].trim().length > 0 && schema.safeParse(details[name]).success
+      Boolean(details[name]?.trim()) && schema.safeParse(details[name]).success
     );
   };
 
   const field = (
     label: string,
-    name: keyof CheckoutDetails,
+    name: keyof CheckoutInput,
     placeholder: string,
     props?: {
       autoComplete?: string;
@@ -94,11 +57,12 @@ export default function CheckoutForm({
 
       <span className="relative block">
         <input
+          {...register(name)}
           name={name}
           type={
             name === "cvv" ? "password" : name === "email" ? "email" : "text"
           }
-          value={details[name]}
+          value={details[name] ?? ""}
           onChange={(event) => update(name, event.target.value)}
           placeholder={placeholder}
           autoComplete={props?.autoComplete}
@@ -127,7 +91,7 @@ export default function CheckoutForm({
           id={`${name}-error`}
           className="mt-1.5 block text-xs text-red-400"
         >
-          {errors[name]}
+          {errors[name]?.message}
         </span>
       )}
     </label>
