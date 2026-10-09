@@ -21,6 +21,10 @@ type Props = {
   movieMinimumAge?: number;
   onRemoveSeat: (seatId: number) => void;
   onChangeTicketType: (seatId: number, ticketTypeSlug: string) => void;
+
+  onCheckout: () => void;
+  isCheckoutPending: boolean;
+  checkoutError: string | null;
 };
 
 export default function BookingSummary({
@@ -31,6 +35,10 @@ export default function BookingSummary({
   movieMinimumAge,
   onRemoveSeat,
   onChangeTicketType,
+
+  onCheckout,
+  isCheckoutPending,
+  checkoutError,
 }: Props) {
   const isTicketTypeAllowed = (ticketType: TicketType) => {
     if (ticketType.blockedFromRatingAge == null || movieMinimumAge == null) {
@@ -151,17 +159,22 @@ export default function BookingSummary({
 
         <button
           type="button"
-          disabled
-          className="mt-5 w-full cursor-not-allowed rounded-lg bg-[#ff321c] px-5 py-3.5 text-xs font-bold text-white opacity-40"
+          onClick={onCheckout}
+          disabled={
+            selectedSeats.length === 0 ||
+            ticketTypes.length === 0 ||
+            isCheckoutPending
+          }
+          className="mt-5 w-full cursor-pointer rounded-lg bg-[#ff321c] px-5 py-3.5 text-xs font-bold text-white transition hover:bg-[#e52d19] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Next: Checkout
+          {isCheckoutPending ? "Reserving seats..." : "Next: Checkout"}
         </button>
 
-        <p className="mt-3 text-center text-[11px] leading-relaxed text-white/35">
-          {selectedSeats.length === 0
-            ? "Select your seats to continue."
-            : "Seat reservation and checkout are coming next."}
-        </p>
+        {checkoutError && (
+          <p role="alert" className="mt-3 text-center text-xs text-red-400">
+            {checkoutError}
+          </p>
+        )}
       </div>
     </aside>
   );
