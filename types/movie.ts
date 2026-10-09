@@ -42,6 +42,7 @@ export type MovieWithSynopsis = Movie & {
 };
 
 export type MovieDetail = MovieWithSynopsis & {
+  isNotified: boolean;
   director: string;
   cast: string;
   availableDates: string[];
