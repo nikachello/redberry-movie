@@ -17,7 +17,7 @@ import type { User } from "@/types/user";
 
 type AuthModal = "login" | "register" | "profile" | null;
 
-type ProtectedAction = () => void;
+type ProtectedAction = (user: User) => void;
 
 type RequireAuthOptions = {
   requireCompleteProfile?: boolean;
@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    action();
+    action(user);
   }
 
   function setAuthenticatedUser(authenticatedUser: User) {
@@ -164,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setModal(null);
 
-    pendingAction.action();
+    pendingAction.action(authenticatedUser);
   }
 
   function updateUser(updatedUser: User) {
@@ -185,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setModal(null);
 
-    pendingAction.action();
+    pendingAction.action(updatedUser);
   }
 
   function clearAuth() {

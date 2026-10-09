@@ -1,7 +1,6 @@
 "use client";
 
 import { Armchair } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import type { MovieDetail } from "@/types/movie";

@@ -1,17 +1,8 @@
 "use client";
 
 import { Armchair, X } from "lucide-react";
-
 import type { SelectedSeat } from "@/types/booking";
-
-type TicketType = {
-  id: number;
-  slug: string;
-  name: string;
-  priceRatio: number;
-  note?: string | null;
-  blockedFromRatingAge?: number | null;
-};
+import { TicketType } from "@/types/order";
 
 type Props = {
   selectedSeats: SelectedSeat[];
@@ -21,11 +12,17 @@ type Props = {
   movieMinimumAge?: number;
   onRemoveSeat: (seatId: number) => void;
   onChangeTicketType: (seatId: number, ticketTypeSlug: string) => void;
-
   onCheckout: () => void;
   isCheckoutPending: boolean;
   checkoutError: string | null;
+  canProceed?: boolean;
 };
+
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+  }).format(price);
+}
 
 export default function BookingSummary({
   selectedSeats,
@@ -35,125 +32,130 @@ export default function BookingSummary({
   movieMinimumAge,
   onRemoveSeat,
   onChangeTicketType,
-
   onCheckout,
   isCheckoutPending,
   checkoutError,
+  canProceed = true,
 }: Props) {
-  const isTicketTypeAllowed = (ticketType: TicketType) => {
-    if (ticketType.blockedFromRatingAge == null || movieMinimumAge == null) {
-      return true;
-    }
+  const isTicketTypeAllowed = (type: TicketType) =>
+    type.blockedFromRatingAge == null ||
+    movieMinimumAge == null ||
+    movieMinimumAge < type.blockedFromRatingAge;
 
-    return movieMinimumAge < ticketType.blockedFromRatingAge;
+  const getTicketType = (slug: string) =>
+    ticketTypes.find((type) => type.slug === slug);
+
+  const getTicketPrice = (slug: string) => {
+    const type = getTicketType(slug);
+
+    return type ? basePrice * type.priceRatio : 0;
   };
 
-  const getTicketPrice = (ticketTypeSlug: string) => {
-    const ticketType = ticketTypes.find((type) => type.slug === ticketTypeSlug);
+  const hasInvalidSelection = selectedSeats.some((seat) => {
+    const type = getTicketType(seat.ticketTypeSlug);
 
-    if (!ticketType) return 0;
-
-    return basePrice * ticketType.priceRatio;
-  };
+    return !type || !isTicketTypeAllowed(type);
+  });
 
   const total = selectedSeats.reduce(
     (sum, seat) => sum + getTicketPrice(seat.ticketTypeSlug),
     0,
   );
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price);
-
   return (
-    <aside className="flex min-h-[420px] flex-col rounded-xl border border-white/5 bg-[#171c30] p-5">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-bold">Your selection</h3>
-
-        {maxSeats !== undefined && (
-          <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/60">
-            {selectedSeats.length}/{maxSeats}
-          </span>
-        )}
-      </div>
+    <aside className="flex min-h-[350px] flex-col text-white">
+      <h3 className="mb-3 text-sm font-bold">
+        Your seats · Max {maxSeats ?? "—"}
+      </h3>
 
       {selectedSeats.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5">
-            <Armchair size={22} className="text-white/30" />
-          </div>
+          <Armchair size={25} className="text-white/30" />
 
           <p className="text-xs text-white/45">No seats selected yet.</p>
 
-          <p className="max-w-[190px] text-[11px] leading-relaxed text-white/30">
-            Choose an available seat from the map to get started.
+          <p className="text-[11px] text-white/30">
+            Choose a seat from the map to get started.
           </p>
         </div>
       ) : (
-        <div className="mt-5 flex-1 space-y-3">
+        <div className="flex-1 space-y-2.5">
           {selectedSeats.map((seat) => (
-            <div
-              key={seat.seatId}
-              className="rounded-lg border border-white/10 bg-white/5 p-3"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#ff321c]/10">
-                    <Armchair size={16} className="text-[#ff321c]" />
-                  </div>
+            <div key={seat.seatId} className="rounded-xl bg-[#202235] p-3">
+              <div className="flex items-center justify-between gap-2 border-b border-white/5 pb-3">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-white/50">Seat</span>
 
-                  <span className="text-sm font-semibold">
-                    Seat {seat.code}
-                  </span>
+                  <span className="font-semibold">{seat.code}</span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => onRemoveSeat(seat.seatId)}
-                  aria-label={`Remove seat ${seat.code}`}
-                  className="cursor-pointer rounded-md p-1.5 text-white/40 transition hover:bg-white/10 hover:text-white"
-                >
-                  <X size={16} />
-                </button>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-semibold tabular-nums">
+                    ₾{formatPrice(getTicketPrice(seat.ticketTypeSlug))}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => onRemoveSeat(seat.seatId)}
+                    aria-label={`Remove seat ${seat.code}`}
+                    className="cursor-pointer text-white/40 transition hover:text-white"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
               </div>
 
-              <div className="mt-3 flex items-center gap-2">
-                <select
-                  aria-label={`Ticket type for seat ${seat.code}`}
-                  value={seat.ticketTypeSlug}
-                  onChange={(event) =>
-                    onChangeTicketType(seat.seatId, event.target.value)
-                  }
-                  className="min-w-0 flex-1 cursor-pointer rounded-md border border-white/10 bg-[#101528] px-3 py-2 text-xs text-white outline-none focus:border-[#ff321c]"
-                >
-                  {ticketTypes.map((type) => (
-                    <option
-                      key={type.id}
-                      value={type.slug}
-                      disabled={!isTicketTypeAllowed(type)}
-                    >
-                      {type.name}
-                    </option>
-                  ))}
-                </select>
+              <div
+                className="mt-3 grid grid-cols-3 gap-1.5"
+                role="group"
+                aria-label={`Ticket type for seat ${seat.code}`}
+              >
+                {ticketTypes.map((type) => {
+                  const allowed = isTicketTypeAllowed(type);
 
-                <span className="shrink-0 text-xs font-bold tabular-nums">
-                  ₾{formatPrice(getTicketPrice(seat.ticketTypeSlug))}
-                </span>
+                  const active = seat.ticketTypeSlug === type.slug;
+
+                  const percentage = Math.round(type.priceRatio * 100);
+
+                  return (
+                    <button
+                      key={type.id}
+                      type="button"
+                      disabled={!allowed}
+                      onClick={() => onChangeTicketType(seat.seatId, type.slug)}
+                      aria-pressed={active}
+                      title={
+                        !allowed
+                          ? (type.note ??
+                            `Not available for movies rated ${movieMinimumAge}+.`)
+                          : (type.note ?? undefined)
+                      }
+                      className={`min-w-0 rounded-full px-1.5 py-2 text-[10px] font-medium whitespace-nowrap transition-colors ${
+                        active
+                          ? "bg-[#f12d17] text-white"
+                          : "bg-[#2d2f43] text-white/80 hover:bg-[#393b52]"
+                      } ${
+                        !allowed
+                          ? "cursor-not-allowed opacity-35"
+                          : "cursor-pointer"
+                      }`}
+                    >
+                      {type.name} {percentage}%
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}
         </div>
       )}
 
-      <div className="mt-6 border-t border-white/10 pt-5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-white/50">Estimated total</span>
+      <div className="mt-5 pt-2">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <span className="text-xs font-bold uppercase">Subtotal</span>
 
-          <span className="text-xl font-bold tabular-nums">
-            ₾{formatPrice(total)}
+          <span className="text-2xl font-bold tabular-nums">
+            ₾ {formatPrice(total)}
           </span>
         </div>
 
@@ -161,17 +163,26 @@ export default function BookingSummary({
           type="button"
           onClick={onCheckout}
           disabled={
+            !canProceed ||
             selectedSeats.length === 0 ||
             ticketTypes.length === 0 ||
-            isCheckoutPending
+            hasInvalidSelection ||
+            isCheckoutPending ||
+            (maxSeats !== undefined && selectedSeats.length > maxSeats)
           }
-          className="mt-5 w-full cursor-pointer rounded-lg bg-[#ff321c] px-5 py-3.5 text-xs font-bold text-white transition hover:bg-[#e52d19] disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full cursor-pointer rounded-full bg-[#f12d17] px-4 py-3 text-xs font-bold text-white transition hover:bg-[#d92815] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isCheckoutPending ? "Reserving seats..." : "Next: Checkout"}
         </button>
 
+        {hasInvalidSelection && (
+          <p role="alert" className="mt-3 text-xs text-red-400">
+            One or more selected ticket types are not allowed for this movie.
+          </p>
+        )}
+
         {checkoutError && (
-          <p role="alert" className="mt-3 text-center text-xs text-red-400">
+          <p role="alert" className="mt-3 text-xs text-red-400">
             {checkoutError}
           </p>
         )}

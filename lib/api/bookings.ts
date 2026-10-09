@@ -23,3 +23,9 @@ export async function getSeatHold(holdId: string) {
 
   return response.data;
 }
+
+export async function releaseSeatHold(holdId: string): Promise<void> {
+  await api<void>(`/holds/${holdId}`, {
+    method: "DELETE",
+  });
+}

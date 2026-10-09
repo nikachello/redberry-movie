@@ -4,20 +4,22 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import type { MovieDetail } from "@/types/movie";
+import type { Session } from "@/types/session";
 
 import { getMovieSessions } from "@/lib/api/movies";
+import { getBookingEligibility } from "@/lib/booking/eligibility";
+
 import { useAuth } from "../auth/AuthProvider";
 
 import MovieDatePicker from "./MovieDatePicker";
 import VenueSessions from "./VenueSessions";
-import { Session } from "@/types/session";
 import BookingModal from "../booking/BookingModal";
 
 type Props = {
   movie: MovieDetail;
 };
 
-function formatDate(date: Date) {
+function formatDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -26,11 +28,13 @@ function formatDate(date: Date) {
 }
 
 export default function MovieSessions({ movie }: Props) {
-  const { user } = useAuth();
+  const { requireAuth, isLoading: isAuthLoading } = useAuth();
 
-  const isAgeBlocked =
-    !!user && user.age !== null && user.age < movie.ageRating.minAge;
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+
+  // Generate the next seven days.
   const dateOptions = useMemo(() => {
     const availableDates = new Set(movie.availableDates);
 
@@ -58,14 +62,15 @@ export default function MovieSessions({ movie }: Props) {
     });
   }, [movie.availableDates]);
 
+  // Select the first available date.
   const initialDate =
     dateOptions.find((date) => date.available)?.date ??
     dateOptions[0]?.date ??
     "";
 
   const [selectedDate, setSelectedDate] = useState(initialDate);
-  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
 
+  // Fetch sessions for the selected date.
   const {
     data: sessionGroups = [],
     isLoading,
@@ -76,8 +81,45 @@ export default function MovieSessions({ movie }: Props) {
 
     queryFn: () => getMovieSessions(movie.slug, selectedDate),
 
-    enabled: !!selectedDate,
+    enabled: Boolean(selectedDate),
   });
+
+  // Authenticate, complete profile, and verify age
+  // before opening the booking modal.
+  const handleSessionSelect = (session: Session) => {
+    if (isAuthLoading) return;
+
+    setBookingError(null);
+
+    requireAuth(
+      (authenticatedUser) => {
+        const eligibility = getBookingEligibility(
+          authenticatedUser,
+          movie.ageRating?.minAge,
+          session.date,
+        );
+
+        if (!eligibility.allowed) {
+          setBookingError(eligibility.reason);
+          return;
+        }
+
+        setSelectedSession(session);
+      },
+      {
+        requireCompleteProfile: true,
+      },
+    );
+  };
+
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date);
+    setBookingError(null);
+  };
+
+  const handleBookingClose = () => {
+    setSelectedSession(null);
+  };
 
   return (
     <section>
@@ -89,16 +131,18 @@ export default function MovieSessions({ movie }: Props) {
         <MovieDatePicker
           dates={dateOptions}
           selectedDate={selectedDate}
-          onSelect={setSelectedDate}
+          onSelect={handleDateSelect}
         />
       </div>
 
-      {/* Age restriction */}
-      {isAgeBlocked && (
-        <div className="mt-4 rounded-[10px] bg-red-500/10 px-4 py-3">
+      {/* Booking eligibility error */}
+      {bookingError && (
+        <div
+          role="alert"
+          className="mt-4 rounded-[10px] border border-red-500/20 bg-red-500/10 px-4 py-3"
+        >
           <p className="text-[12px] font-semibold text-red-400">
-            This film is rated {movie.ageRating.code}. You cannot buy tickets
-            for it with this account.
+            {bookingError}
           </p>
         </div>
       )}
@@ -121,7 +165,7 @@ export default function MovieSessions({ movie }: Props) {
 
             <button
               type="button"
-              onClick={() => refetch()}
+              onClick={() => void refetch()}
               className="mt-3 cursor-pointer text-[12px] font-semibold text-white underline"
             >
               Try again
@@ -150,17 +194,19 @@ export default function MovieSessions({ movie }: Props) {
                 key={group.venue.id}
                 group={group}
                 movie={movie}
-                onSelect={setSelectedSession}
+                onSelect={handleSessionSelect}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* Booking modal */}
       {selectedSession && (
         <BookingModal
           movie={movie}
           session={selectedSession}
-          onClose={() => setSelectedSession(null)}
+          onClose={handleBookingClose}
         />
       )}
     </section>
