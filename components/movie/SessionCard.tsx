@@ -10,20 +10,12 @@ import type { Session } from "@/types/session";
 type Props = {
   session: Session;
   movie: MovieDetail;
+  onSelect: (session: Session) => void;
 };
 
-export default function SessionCard({ session, movie }: Props) {
-  const router = useRouter();
-
+export default function SessionCard({ session, movie, onSelect }: Props) {
   const { user, requireAuth } = useAuth();
 
-  /*
-   * Guests are NOT age-blocked.
-   *
-   * Requirement:
-   * unauthenticated users can click a session and
-   * authentication happens afterwards.
-   */
   const isAgeBlocked =
     !!user && user.age !== null && user.age < movie.ageRating.minAge;
 
@@ -36,7 +28,7 @@ export default function SessionCard({ session, movie }: Props) {
 
     requireAuth(
       () => {
-        router.push(`/sessions/${session.id}/seats`);
+        onSelect(session);
       },
       {
         requireCompleteProfile: true,

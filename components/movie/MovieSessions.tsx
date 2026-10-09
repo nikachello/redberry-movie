@@ -10,6 +10,8 @@ import { useAuth } from "../auth/AuthProvider";
 
 import MovieDatePicker from "./MovieDatePicker";
 import VenueSessions from "./VenueSessions";
+import { Session } from "@/types/session";
+import BookingModal from "../booking/BookingModal";
 
 type Props = {
   movie: MovieDetail;
@@ -62,6 +64,7 @@ export default function MovieSessions({ movie }: Props) {
     "";
 
   const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
 
   const {
     data: sessionGroups = [],
@@ -143,11 +146,23 @@ export default function MovieSessions({ movie }: Props) {
         {!isLoading && !isError && sessionGroups.length > 0 && (
           <div className="space-y-7">
             {sessionGroups.map((group) => (
-              <VenueSessions key={group.venue.id} group={group} movie={movie} />
+              <VenueSessions
+                key={group.venue.id}
+                group={group}
+                movie={movie}
+                onSelect={setSelectedSession}
+              />
             ))}
           </div>
         )}
       </div>
+      {selectedSession && (
+        <BookingModal
+          movie={movie}
+          session={selectedSession}
+          onClose={() => setSelectedSession(null)}
+        />
+      )}
     </section>
   );
 }

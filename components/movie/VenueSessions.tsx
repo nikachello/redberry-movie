@@ -10,6 +10,7 @@ import SessionCard from "./SessionCard";
 type Props = {
   group: MovieSessionsGroup;
   movie: MovieDetail;
+  onSelect: (session: Session) => void;
 };
 
 type HallGroup = {
@@ -18,7 +19,7 @@ type HallGroup = {
   sessions: Session[];
 };
 
-export default function VenueSessions({ group, movie }: Props) {
+export default function VenueSessions({ group, movie, onSelect }: Props) {
   const halls = useMemo(() => {
     const map = new Map<number, HallGroup>();
 
@@ -55,7 +56,12 @@ export default function VenueSessions({ group, movie }: Props) {
 
             <div className="flex flex-wrap gap-2">
               {hall.sessions.map((session) => (
-                <SessionCard key={session.id} session={session} movie={movie} />
+                <SessionCard
+                  key={session.id}
+                  session={session}
+                  movie={movie}
+                  onSelect={onSelect}
+                />
               ))}
             </div>
           </div>

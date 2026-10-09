@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import type { Movie } from "@/types/movie";
 import Link from "next/link";
 import { getRecentlyViewed } from "@/lib/utils";
-import Image from "next/image";
 
 export default function RecentlyViewed() {
   const [movies, setMovies] = useState<Movie[]>([]);

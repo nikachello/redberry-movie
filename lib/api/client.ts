@@ -10,6 +10,7 @@ export type ApiError = {
   status: number;
   message: string;
   errors?: Record<string, string[]>;
+  contested?: string[];
 };
 
 export async function api<T>(
@@ -40,6 +41,7 @@ export async function api<T>(
       status: response.status,
       message: error?.message ?? "Something went wrong.",
       errors: error?.errors,
+      contested: error?.contested,
     } satisfies ApiError;
   }
 
