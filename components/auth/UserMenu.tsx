@@ -1,21 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Check, LogOut, Ticket, UserRound } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
+import Link from "next/link";
 
 import { logout } from "@/lib/api/auth";
 import { useAuth } from "./AuthProvider";
 
 export default function UserMenu() {
-  const { user, clearAuth, openProfile } = useAuth();
+  const { user, clearAuth } = useAuth();
 
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   const logoutMutation = useMutation({
     mutationFn: logout,
-
     onSettled: () => {
       setIsOpen(false);
       clearAuth();
@@ -47,17 +49,14 @@ export default function UserMenu() {
     .slice(0, 2)
     .toUpperCase();
 
-  function handleOpenProfile() {
-    setIsOpen(false);
-    openProfile();
-  }
-
   return (
     <div ref={menuRef} className="relative">
       {/* Trigger */}
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
         className="flex cursor-pointer items-center gap-3"
       >
         {user.avatar ? (
@@ -79,7 +78,10 @@ export default function UserMenu() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 top-[calc(100%+12px)] w-[320px] overflow-hidden rounded-[20px] bg-[#080d20] shadow-2xl">
+        <div
+          role="menu"
+          className="absolute right-0 top-[calc(100%+12px)] z-[100] w-[320px] overflow-hidden rounded-[20px] bg-[#080d20] shadow-2xl"
+        >
           <div className="p-5">
             {/* User */}
             <div className="flex items-center gap-3">
@@ -132,24 +134,29 @@ export default function UserMenu() {
               </div>
             )}
 
-            {/* Menu */}
+            {/* Menu links */}
             <div className="mt-4">
-              <button
-                type="button"
-                onClick={handleOpenProfile}
-                className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-1 py-3 text-left text-[13px] font-semibold text-white transition-colors hover:text-white/70"
+              <Link
+                role="menuitem"
+                href="/profile"
+                onClick={() => setIsOpen(false)}
+                className={`flex w-full items-center gap-3 rounded-lg px-1 py-3 text-left text-[13px] font-semibold transition-colors hover:text-white/70 ${
+                  pathname === "/profile" ? "text-[#ff503c]" : "text-white"
+                }`}
               >
                 <UserRound size={17} />
                 My Profile
-              </button>
+              </Link>
 
-              <button
-                type="button"
-                className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-1 py-3 text-left text-[13px] font-semibold text-white transition-colors hover:text-white/70"
+              <Link
+                role="menuitem"
+                href="/profile?tab=tickets"
+                onClick={() => setIsOpen(false)}
+                className="flex w-full items-center gap-3 rounded-lg px-1 py-3 text-left text-[13px] font-semibold text-white transition-colors hover:text-white/70"
               >
                 <Ticket size={17} />
                 My Tickets
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -157,12 +164,12 @@ export default function UserMenu() {
           <div className="border-t border-white/10 px-5 py-3">
             <button
               type="button"
+              role="menuitem"
               disabled={logoutMutation.isPending}
               onClick={() => logoutMutation.mutate()}
               className="flex w-full cursor-pointer items-center gap-3 py-2 text-left text-[13px] font-semibold text-[#ff321c] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <LogOut size={17} />
-
               {logoutMutation.isPending ? "Logging out..." : "Log out"}
             </button>
           </div>
