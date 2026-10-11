@@ -113,7 +113,7 @@ export default function HeroSlider({ movies }: HeroSliderProps) {
                 {/* Buttons */}
                 <div className="mt-7 flex flex-wrap gap-3">
                   <Link
-                    href={`/movies/${movie.id}`}
+                    href={`/movies/${movie.slug}`}
                     className="flex items-center gap-2 rounded-full bg-red-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-red-600"
                   >
                     <Ticket size={17} />
@@ -121,7 +121,7 @@ export default function HeroSlider({ movies }: HeroSliderProps) {
                   </Link>
 
                   <Link
-                    href={`/movies/${movie.id}`}
+                    href={`/movies/${movie.slug}`}
                     className="rounded-full bg-white/15 px-7 py-3 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/25"
                   >
                     All sessions
