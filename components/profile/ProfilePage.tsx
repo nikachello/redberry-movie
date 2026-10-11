@@ -367,7 +367,7 @@ function TicketsSection({
               <button
                 type="button"
                 disabled={refundMutation.isPending}
-                onClick={() => refundMutation.mutate(confirmOrder.id)}
+                onClick={() => refundMutation.mutate(confirmOrder.reference)}
                 className="cursor-pointer rounded-full bg-[#f12d17] px-5 py-2.5 text-sm font-bold disabled:opacity-50"
               >
                 {refundMutation.isPending ? "Refunding..." : "Confirm Refund"}

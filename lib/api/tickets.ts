@@ -12,10 +12,12 @@ export async function getTickets(filter: TicketFilter): Promise<TicketOrder[]> {
   return response.data;
 }
 
-export async function refundTicket(orderId: number): Promise<TicketOrder> {
+export async function refundTicket(reference: string): Promise<TicketOrder> {
   const response = await api<ApiResponse<TicketOrder>>(
-    `/orders/${orderId}/refund`,
-    { method: "POST" },
+    `/orders/${encodeURIComponent(reference)}/refund`,
+    {
+      method: "POST",
+    },
   );
 
   return response.data;
