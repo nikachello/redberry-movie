@@ -1,9 +1,4 @@
-export type Format = {
-  id: number;
-  slug: string;
-  name: string;
-  priceUpLift: string;
-};
+import { Format } from "./movie";
 
 export type Venue = {
   id: number;

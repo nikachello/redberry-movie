@@ -5,7 +5,7 @@ export type Format = {
   id: number;
   slug: string;
   name: string;
-  priceUpLift: number;
+  priceUplift: number;
 };
 
 export type Genre = {
@@ -35,6 +35,7 @@ export type Movie = {
   ageRating: AgeRating;
   genres: Genre[];
   formats: Format[];
+  isNotified: boolean;
 };
 
 export type MovieWithSynopsis = Movie & {
@@ -42,7 +43,6 @@ export type MovieWithSynopsis = Movie & {
 };
 
 export type MovieDetail = MovieWithSynopsis & {
-  isNotified: boolean;
   director: string;
   cast: string;
   availableDates: string[];
