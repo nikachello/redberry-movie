@@ -100,7 +100,7 @@ export default function OrderConfirmation({ order, onClose }: Props) {
 
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         <Link
-          href="/my-tickets"
+          href="/profile?tab=tickets"
           onClick={onClose}
           className="rounded-full bg-[#f12d17] px-6 py-3 text-xs font-bold text-white transition hover:bg-[#d92815]"
         >
